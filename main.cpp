@@ -7,6 +7,7 @@ static int codeFiles = 0;
 static int headerFiles = 0;
 static int resourceFiles = 0;
 static int jsonFiles = 0;
+static int imageFiles = 0;
 
 static int emptyLines = 0;
 static int commentLines = 0;
@@ -16,6 +17,7 @@ static int jsonLines = 0;
 
 static bool recurse = false;
 static bool incJson = false;
+QStringList imageSuffixes { "png", "jpg", "jpeg", "tiff", "svg", "ico", "bmp", "gif", "tif", "webp", "HEIC", "HEIF"};
 
 QTextStream out (stdout);
 
@@ -88,6 +90,10 @@ void processFile (const QFileInfo& entry)
     {
         jsonFiles++;
         processJson (entry.absoluteFilePath ());
+    }
+    else if (imageSuffixes.contains (suffix))
+    {
+        imageFiles++;
     }
     else
     {
@@ -172,6 +178,7 @@ int main (int argc, char* argv[])
             {
                 out << "  Json:         " << locale.toString(jsonFiles) << '\n';
             }
+            out << " Images:        " << locale.toString (imageFiles) << '\n';
             out << "  Other:        " << locale.toString (otherFiles) << '\n';
             out << "  TOTAL:        " << locale.toString (codeFiles + headerFiles + resourceFiles + otherFiles) << "\n\n";
         }
