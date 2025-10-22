@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(lineCounter LANGUAGES CXX VERSION 0.0.1)
+project(lineCounter LANGUAGES CXX VERSION 0.0.2)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -24,7 +24,6 @@ install(TARGETS lineCounter
 )
 
 set_property (SOURCE main.cpp PROPERTY COMPILE_DEFINITIONS VERSION="${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-
 
 #cpack stuff
 include(InstallRequiredSystemLibraries)

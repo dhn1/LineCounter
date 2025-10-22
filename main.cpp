@@ -6,12 +6,16 @@ static int otherFiles = 0;
 static int codeFiles = 0;
 static int headerFiles = 0;
 static int resourceFiles = 0;
+static int jsonFiles = 0;
 
 static int emptyLines = 0;
 static int commentLines = 0;
 static int preprocessorLines = 0;
 static int codeLines = 0;
+static int jsonLines = 0;
+
 static bool recurse = false;
+static bool incJson = false;
 
 QTextStream out (stdout);
 
@@ -50,6 +54,19 @@ void processCode (const QString& path)
     }
 }
 
+void processJson (const QString& path)
+{
+    QFile in (path);
+    if (!in.open (QFile::ReadOnly))
+    {
+        qDebug ().nospace ().noquote () << "Unable to open file \"" << path << "\".";
+        return;
+    }
+
+    auto lines = in.readAll ().split ('\n');
+    jsonLines += lines.count ();
+}
+
 void processFile (const QFileInfo& entry)
 {
     auto suffix = entry.suffix ();
@@ -66,6 +83,11 @@ void processFile (const QFileInfo& entry)
     else if (suffix == QStringLiteral ("qrc"))
     {
         resourceFiles++;
+    }
+    else if (suffix == QStringLiteral ("json") && incJson)
+    {
+        jsonFiles++;
+        processJson (entry.absoluteFilePath ());
     }
     else
     {
@@ -105,7 +127,7 @@ bool processFolder (const QString& path)
 
 int main (int argc, char* argv[])
 {
-    const QCoreApplication a (argc, argv);
+    const QCoreApplication app (argc, argv);
 
     QCoreApplication::setApplicationName (QStringLiteral ("lineCounter"));
     QCoreApplication::setApplicationVersion (QStringLiteral (VERSION));
@@ -117,18 +139,20 @@ int main (int argc, char* argv[])
     parser.addVersionOption ();
     parser.addPositionalArgument (QStringLiteral ("root"), QStringLiteral ("Path to root of code project"));
     parser.addOption (QCommandLineOption (QStringList () << QByteArrayLiteral ("recurse") << QByteArrayLiteral ("r"), QStringLiteral ("Recurse into sub directories")));
-    parser.process (a);
+    parser.addOption (QCommandLineOption (QStringList () << QByteArrayLiteral ("include-json") << QByteArrayLiteral ("j"), QStringLiteral ("Additionally, show JSON files & lines.")));
+    parser.process (app);
 
     recurse = parser.isSet (QStringLiteral ("recurse"));
 
-    if (parser.positionalArguments ().isEmpty())
+    incJson = parser.isSet ("j");
+    if (parser.positionalArguments ().isEmpty ())
     {
         parser.showHelp (100);
     }
 
     QFileInfo info (parser.positionalArguments ().constFirst ());
     bool showFileInfo = true;
-    if (info.exists() && info.isFile())
+    if (info.exists () && info.isFile ())
     {
         processFile (info);
         showFileInfo = false;
@@ -144,6 +168,10 @@ int main (int argc, char* argv[])
             out << "  Code:         " << locale.toString (codeFiles) << '\n';
             out << "  Header:       " << locale.toString (headerFiles) << '\n';
             out << "  Resource:     " << locale.toString (resourceFiles) << '\n';
+            if (incJson)
+            {
+                out << "  Json:         " << locale.toString(jsonFiles) << '\n';
+            }
             out << "  Other:        " << locale.toString (otherFiles) << '\n';
             out << "  TOTAL:        " << locale.toString (codeFiles + headerFiles + resourceFiles + otherFiles) << "\n\n";
         }
@@ -153,7 +181,11 @@ int main (int argc, char* argv[])
         out << "  Comment:      " << locale.toString (commentLines) << '\n';
         out << "  Preprocessor: " << locale.toString (preprocessorLines) << '\n';
         out << "  Empty:        " << locale.toString (emptyLines) << '\n';
-        out << "  TOTAL         " << locale.toString (codeLines + commentLines + preprocessorLines + emptyLines) << '\n';
+        if (incJson)
+        {
+            out << "  JSON:         " << locale.toString (jsonLines) << '\n';
+        }
+        out << "  TOTAL         " << locale.toString (codeLines + commentLines + preprocessorLines + emptyLines + jsonLines) << '\n';
         return 0;
     }
     return 100;
