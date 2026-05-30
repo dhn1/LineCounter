@@ -8,7 +8,7 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+set (CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 file(STRINGS "/etc/os-release" RESULTS REGEX "^ID=(.*)")
 set (DISTRO "${CMAKE_MATCH_1}")
@@ -30,6 +30,8 @@ endif ()
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+
+configure_file(leak.supp ${CMAKE_BINARY_DIR}/bin/leak.supp COPYONLY)
 
 add_executable(lineCounter
   main.cpp
@@ -63,3 +65,7 @@ set (CPACK_RPM_PACKAGE_GROUP "Development/Tools")
 set (CPACK_RPM_PACKAGE_RELEASE "1")
 
 include(CPack)
+
+file (GLOB_RECURSE other "./Desktop/*")
+set (other ${other} leak.supp)
+add_custom_target (other SOURCES ${other})

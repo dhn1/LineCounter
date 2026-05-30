@@ -1,0 +1,4 @@
+#leak:libnvidia-glcore.so
+#leak:libQt6DBus.so
+#leak:libfontconfig
+#leak:libqt-plugin-wayland-egl
